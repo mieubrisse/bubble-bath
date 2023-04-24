@@ -194,8 +194,7 @@ func New() Model {
 		viewport: &vp,
 	}
 
-	m.SetHeight(defaultHeight)
-	m.SetWidth(defaultWidth)
+	m.Resize(defaultWidth, defaultHeight)
 
 	return m
 }
@@ -245,6 +244,18 @@ func (m *Model) GetLength() int {
 // GetNumRows returns the number of lines that are currently in the text input.
 func (m *Model) GetNumRows() int {
 	return len(m.value)
+}
+
+// SetPromptFunc supersedes the Prompt field and sets a dynamic prompt
+// instead.
+// If the function returns a prompt that is shorter than the
+// specified promptWidth, it will be padded to the left.
+// If it returns a prompt that is longer, display artifacts
+// may occur; the caller is responsible for computing an adequate
+// promptWidth.
+func (m *Model) SetPromptFunc(promptWidth int, fn func(lineIdx int) string) {
+	m.promptFunc = fn
+	m.promptWidth = promptWidth
 }
 
 // MoveCursorDown moves the cursor down by one line.
@@ -361,7 +372,7 @@ func (m *Model) MoveCursorToLineEnd(bindToLine bool) {
 	m.SetCursorColumn(newPosition)
 }
 
-func (m *Model) GetRow() int {
+func (m *Model) GetCursorRow() int {
 	return m.row
 }
 
@@ -395,20 +406,17 @@ func (m *Model) IsFocused() bool {
 	return m.focus
 }
 
-// Focus sets the focus state on the model. When the model is in focus it can
-// receive keyboard input and the cursor will be hidden.
-func (m *Model) Focus() tea.Cmd {
-	m.focus = true
-	m.style = &m.FocusedStyle
-	return m.Cursor.Focus()
-}
+func (m *Model) SetFocus(isFocused bool) tea.Cmd {
+	m.focus = isFocused
 
-// Blur removes the focus state on the model.  When the model is blurred it can
-// not receive keyboard input and the cursor will be hidden.
-func (m *Model) Blur() {
-	m.focus = false
-	m.style = &m.BlurredStyle
-	m.Cursor.Blur()
+	var cmd tea.Cmd
+	if isFocused {
+		m.style = &m.FocusedStyle
+		cmd = m.Cursor.Focus()
+	} else {
+		m.style = &m.BlurredStyle
+	}
+	return cmd
 }
 
 // Reset sets the input to its default state with no input.
@@ -436,7 +444,7 @@ func (m *Model) DeleteAfterCursor() {
 }
 
 // DeleteOnCursor deletes the single character on the cursor
-// Returnst he rune that was deleted (if any)
+// Returns the rune that was deleted (if any)
 func (m *Model) DeleteOnCursor() []rune {
 	currentRow := m.value[m.row]
 	if len(currentRow) == 0 {
@@ -579,19 +587,29 @@ func (m *Model) GetLineInfo() LineInfo {
 	return LineInfo{}
 }
 
-// SetWidth sets the width of the textarea to fit exactly within the given width.
+// GetWidth returns the width of the textarea.
+func (m *Model) GetWidth() int {
+	return m.width
+}
+
+// GetHeight returns the current height of the textarea.
+func (m *Model) GetHeight() int {
+	return m.height
+}
+
+// Resize sets the height & width of the textarea to fit exactly within the given dimensions.
 // This means that the textarea will account for the width of the prompt and
 // whether or not line numbers are being shown.
 //
-// Ensure that SetWidth is called after setting the Prompt and ShowLineNumbers,
-// If it important that the width of the textarea be exactly the given width
+// Resize should be called after setting the Prompt and ShowLineNumbers,
+// It is important that the width of the textarea be exactly the given width
 // and no more.
-func (m *Model) SetWidth(w int) {
-	m.viewport.Width = bubble_bath.Clamp(w, minWidth, maxWidth)
+func (m *Model) Resize(width int, height int) {
+	m.viewport.Width = bubble_bath.Clamp(width, minWidth, maxWidth)
 
 	// Since the width of the textarea input is dependant on the width of the
 	// prompt and line numbers, we need to calculate it by subtracting.
-	inputWidth := w
+	inputWidth := width
 	if m.ShowLineNumbers {
 		inputWidth -= rw.StringWidth(fmt.Sprintf(m.lineNumberFormat, 0))
 	}
@@ -605,36 +623,10 @@ func (m *Model) SetWidth(w int) {
 
 	inputWidth -= m.promptWidth
 	m.width = bubble_bath.Clamp(inputWidth, minWidth, maxWidth)
-}
 
-// GetWidth returns the width of the textarea.
-func (m *Model) GetWidth() int {
-	return m.width
-}
+	m.height = bubble_bath.Clamp(height, minHeight, maxHeight)
 
-// SetPromptFunc supersedes the Prompt field and sets a dynamic prompt
-// instead.
-// If the function returns a prompt that is shorter than the
-// specified promptWidth, it will be padded to the left.
-// If it returns a prompt that is longer, display artifacts
-// may occur; the caller is responsible for computing an adequate
-// promptWidth.
-func (m *Model) SetPromptFunc(promptWidth int, fn func(lineIdx int) string) {
-	m.promptFunc = fn
-	m.promptWidth = promptWidth
-}
-
-// GetHeight returns the current height of the textarea.
-func (m *Model) GetHeight() int {
-	return m.height
-}
-
-// SetHeight sets the height of the textarea.
-func (m *Model) SetHeight(h int) {
-	m.height = bubble_bath.Clamp(h, minHeight, maxHeight)
-
-	// Leave room for the extra mode display line
-	m.viewport.Height = bubble_bath.Clamp(h, minHeight, maxHeight)
+	m.viewport.Height = bubble_bath.Clamp(height, minHeight, maxHeight)
 }
 
 // Update is the Bubble Tea update loop.
