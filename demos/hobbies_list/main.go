@@ -4,7 +4,7 @@ import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mieubrisse/bubble-bath"
-	"github.com/mieubrisse/bubble-bath/main/my_app"
+	"github.com/mieubrisse/bubble-bath/demos/hobbies_list/my_app"
 	"os"
 )
 
