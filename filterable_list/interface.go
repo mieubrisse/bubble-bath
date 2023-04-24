@@ -18,6 +18,8 @@ type Component[T filterable_list_item.Component] interface {
 	Scroll(scrollOffset int)
 
 	GetItems() []T
+	// TODO AddItems
+	// TODO RemoveItems
 	SetItems(items []T)
 
 	GetFilteredItemIndices() []int

@@ -13,8 +13,12 @@ type Component[T filterable_checklist_item.Component] interface {
 	// The items in the original list will match the items from GetItems
 	GetFilterableList() filterable_list.Component[T]
 
-	SetItems(items []T)
 	GetItems() []T
+	// TODO AddItems
+	// TODO RemoveItems
+
+	// SetItems replaces all the items in the list, resetting the highlight & selection
+	SetItems(items []T)
 
 	// GetSelectedItemOriginalIndices gets the indices within the current items list that are selected
 	GetSelectedItemOriginalIndices() map[int]bool
