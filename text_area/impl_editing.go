@@ -7,25 +7,25 @@ import (
 )
 
 // SetValue sets the value of the text input.
-func (m *Model) SetValue(s string) {
+func (m *implementation) SetValue(s string) {
 	m.Reset()
 	m.InsertString(s)
 	m.MoveCursorLeftOneRune()
 }
 
 // InsertString inserts a string at the cursor position.
-func (m *Model) InsertString(s string) {
+func (m *implementation) InsertString(s string) {
 	m.insertRunesFromUserInput([]rune(s))
 }
 
 // InsertRune inserts a rune at the cursor position.
-func (m *Model) InsertRune(r rune) {
+func (m *implementation) InsertRune(r rune) {
 	m.insertRunesFromUserInput([]rune{r})
 }
 
 // DeleteBeforeCursor deletes all text before the cursor. Returns whether or
 // not the cursor blink should be reset.
-func (m *Model) DeleteBeforeCursor() {
+func (m *implementation) DeleteBeforeCursor() {
 	m.value[m.row] = m.value[m.row][m.col:]
 	m.SetCursorColumn(0)
 }
@@ -33,14 +33,14 @@ func (m *Model) DeleteBeforeCursor() {
 // DeleteAfterCursor deletes all text after the cursor. Returns whether or not
 // the cursor blink should be reset. If input is masked delete everything after
 // the cursor so as not to reveal word breaks in the masked input.
-func (m *Model) DeleteAfterCursor() {
+func (m *implementation) DeleteAfterCursor() {
 	m.value[m.row] = m.value[m.row][:m.col]
 	m.SetCursorColumn(len(m.value[m.row]) - 1)
 }
 
 // DeleteOnCursor deletes the single character on the cursor
 // Returns the rune that was deleted (if any)
-func (m *Model) DeleteOnCursor() []rune {
+func (m *implementation) DeleteOnCursor() []rune {
 	currentRow := m.value[m.row]
 	if len(currentRow) == 0 {
 		return make([]rune, 0)
@@ -60,7 +60,7 @@ func (m *Model) DeleteOnCursor() []rune {
 	return deletedChar
 }
 
-func (m *Model) InsertLineAbove() {
+func (m *implementation) InsertLineAbove() {
 	newValue := make([][]rune, 0, maxHeight)
 
 	preCursorLines := m.value[0:m.row]
@@ -75,7 +75,7 @@ func (m *Model) InsertLineAbove() {
 	m.value = newValue
 }
 
-func (m *Model) InsertLineBelow() {
+func (m *implementation) InsertLineBelow() {
 	newValue := make([][]rune, 0, maxHeight)
 
 	cursorLineAndPrevious := m.value[0 : m.row+1]
@@ -89,7 +89,7 @@ func (m *Model) InsertLineBelow() {
 	m.value = newValue
 }
 
-func (m *Model) DeleteLine() {
+func (m *implementation) DeleteLine() {
 	if len(m.value) <= 1 {
 		m.value = make([][]rune, minHeight, maxHeight)
 		m.SetCursorColumn(0)
@@ -111,13 +111,13 @@ func (m *Model) DeleteLine() {
 	m.row = bubble_bath.Clamp(m.row, 0, len(m.value)-1)
 }
 
-func (m *Model) ClearLine() {
+func (m *implementation) ClearLine() {
 	m.value[m.row] = make([]rune, 0, maxWidth)
 	m.SetCursorColumn(0)
 }
 
 // Reset sets the input to its default state with no input.
-func (m *Model) Reset() {
+func (m *implementation) Reset() {
 	m.value = make([][]rune, minHeight, maxHeight)
 	m.col = 0
 	m.row = 0
@@ -130,7 +130,7 @@ func (m *Model) Reset() {
 // ====================================================================================================
 
 // rsan initializes or retrieves the rune sanitizer.
-func (m *Model) san() runeutil.Sanitizer {
+func (m *implementation) san() runeutil.Sanitizer {
 	if m.rsan == nil {
 		// Textinput has all its input on a single line so collapse
 		// newlines/tabs to single spaces.
@@ -140,7 +140,7 @@ func (m *Model) san() runeutil.Sanitizer {
 }
 
 // insertRunesFromUserInput inserts runes at the current cursor position.
-func (m *Model) insertRunesFromUserInput(runes []rune) {
+func (m *implementation) insertRunesFromUserInput(runes []rune) {
 	// Clean up any special characters in the input provided by the
 	// clipboard. This avoids bugs due to e.g. tab characters and
 	// whatnot.
@@ -227,7 +227,7 @@ func (m *Model) insertRunesFromUserInput(runes []rune) {
 
 // deleteWordLeft deletes the word left to the cursor. Returns whether or not
 // the cursor blink should be reset.
-func (m *Model) deleteWordLeft() {
+func (m *implementation) deleteWordLeft() {
 	if m.col == 0 || len(m.value[m.row]) == 0 {
 		return
 	}
@@ -266,7 +266,7 @@ func (m *Model) deleteWordLeft() {
 }
 
 // deleteWordRight deletes the word right to the cursor.
-func (m *Model) deleteWordRight() {
+func (m *implementation) deleteWordRight() {
 	if m.col >= len(m.value[m.row]) || len(m.value[m.row]) == 0 {
 		return
 	}
@@ -299,7 +299,7 @@ func (m *Model) deleteWordRight() {
 	m.SetCursorColumn(oldCol)
 }
 
-func (m *Model) doWordRight(fn func(charIdx int, pos int)) {
+func (m *implementation) doWordRight(fn func(charIdx int, pos int)) {
 	haveEncounteredWhitespace := false
 	for {
 		// If we're at (or beyond) the last char of the line (which may be empty)...
@@ -356,7 +356,7 @@ func (m *Model) doWordRight(fn func(charIdx int, pos int)) {
 }
 
 // mergeLineBelow merges the current line with the line below.
-func (m *Model) mergeLineBelow(row int) {
+func (m *implementation) mergeLineBelow(row int) {
 	if row >= len(m.value)-1 {
 		return
 	}
@@ -376,7 +376,7 @@ func (m *Model) mergeLineBelow(row int) {
 }
 
 // mergeLineAbove merges the current line the cursor is on with the line above.
-func (m *Model) mergeLineAbove(row int) {
+func (m *implementation) mergeLineAbove(row int) {
 	if row <= 0 {
 		return
 	}
@@ -398,7 +398,7 @@ func (m *Model) mergeLineAbove(row int) {
 	}
 }
 
-func (m *Model) splitLine(row, col int) {
+func (m *implementation) splitLine(row, col int) {
 	// To perform a split, take the current line and keep the content before
 	// the cursor, take the content after the cursor and make it the content of
 	// the line underneath, and shift the remaining lines down by one

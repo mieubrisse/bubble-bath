@@ -24,8 +24,6 @@ const (
 	defaultCharLimit = 400
 	maxHeight        = 99
 	maxWidth         = 500
-
-	lineNumberColorHex = "#5d5d5d"
 )
 
 // Paste is a tea.Cmd for pasting from the clipboard into the text input.
@@ -41,8 +39,8 @@ func Paste() tea.Msg {
 type pasteMsg string
 type pasteErrMsg struct{ error }
 
-// Model is the Bubble Tea model for this text area element.
-type Model struct {
+// implementation is the Bubble Tea model for this text area element.
+type implementation struct {
 	Err error
 
 	// General settings.
@@ -131,14 +129,14 @@ type Model struct {
 }
 
 // New creates a new model with default settings.
-func New() Model {
+func New() Component {
 	vp := viewport.New(0, 0)
 	vp.KeyMap = viewport.KeyMap{}
 	cur := cursor.New()
 
 	focusedStyle, blurredStyle := DefaultStyles()
 
-	m := Model{
+	m := &implementation{
 		CharLimit:            defaultCharLimit,
 		Prompt:               lipgloss.ThickBorder().Left + " ",
 		style:                &blurredStyle,
@@ -164,7 +162,7 @@ func New() Model {
 }
 
 // GetValue returns the value of the text input.
-func (m *Model) GetValue() string {
+func (m *implementation) GetValue() string {
 	if m.value == nil {
 		return ""
 	}
@@ -179,7 +177,7 @@ func (m *Model) GetValue() string {
 }
 
 // GetLength returns the number of characters currently in the text input.
-func (m *Model) GetLength() int {
+func (m *implementation) GetLength() int {
 	var l int
 	for _, row := range m.value {
 		l += rw.StringWidth(string(row))
@@ -189,7 +187,7 @@ func (m *Model) GetLength() int {
 }
 
 // GetNumRows returns the number of lines that are currently in the text input.
-func (m *Model) GetNumRows() int {
+func (m *implementation) GetNumRows() int {
 	return len(m.value)
 }
 
@@ -200,27 +198,27 @@ func (m *Model) GetNumRows() int {
 // If it returns a prompt that is longer, display artifacts
 // may occur; the caller is responsible for computing an adequate
 // promptWidth.
-func (m *Model) SetPromptFunc(promptWidth int, fn func(lineIdx int) string) {
+func (m *implementation) SetPromptFunc(promptWidth int, fn func(lineIdx int) string) {
 	m.promptFunc = fn
 	m.promptWidth = promptWidth
 }
 
 // GetCursorColumn gets the column within the rune grid where the cursor is currently at
 // Note that the cursor can be beyond the right-hand end of the rune grid!
-func (m *Model) GetCursorColumn() int {
+func (m *implementation) GetCursorColumn() int {
 	return m.col
 }
 
-func (m *Model) GetCursorRow() int {
+func (m *implementation) GetCursorRow() int {
 	return m.row
 }
 
 // IsFocused returns the focus state on the model.
-func (m *Model) IsFocused() bool {
+func (m *implementation) IsFocused() bool {
 	return m.focus
 }
 
-func (m *Model) SetFocus(isFocused bool) tea.Cmd {
+func (m *implementation) SetFocus(isFocused bool) tea.Cmd {
 	m.focus = isFocused
 
 	var cmd tea.Cmd
@@ -235,7 +233,7 @@ func (m *Model) SetFocus(isFocused bool) tea.Cmd {
 
 // GetLineInfo returns the number of characters from the start of the
 // (soft-wrapped) line and the (soft-wrapped) line width.
-func (m *Model) GetLineInfo() LineInfo {
+func (m *implementation) GetLineInfo() LineInfo {
 	grid := wrap(m.value[m.row], m.width)
 
 	// Find out which line we are currently on. This can be determined by the
@@ -275,12 +273,12 @@ func (m *Model) GetLineInfo() LineInfo {
 }
 
 // GetWidth returns the width of the textarea.
-func (m *Model) GetWidth() int {
+func (m *implementation) GetWidth() int {
 	return m.width
 }
 
 // GetHeight returns the current height of the textarea.
-func (m *Model) GetHeight() int {
+func (m *implementation) GetHeight() int {
 	return m.height
 }
 
@@ -291,7 +289,7 @@ func (m *Model) GetHeight() int {
 // Resize should be called after setting the Prompt and ShowLineNumbers,
 // It is important that the width of the textarea be exactly the given width
 // and no more.
-func (m *Model) Resize(width int, height int) {
+func (m *implementation) Resize(width int, height int) {
 	m.viewport.Width = bubble_bath.Clamp(width, minWidth, maxWidth)
 
 	// Since the width of the textarea input is dependant on the width of the
@@ -317,7 +315,7 @@ func (m *Model) Resize(width int, height int) {
 }
 
 // Update is the Bubble Tea update loop.
-func (m *Model) Update(msg tea.Msg) tea.Cmd {
+func (m *implementation) Update(msg tea.Msg) tea.Cmd {
 	if !m.focus {
 		m.Cursor.Blur()
 		return nil
@@ -449,7 +447,7 @@ func (m *Model) Update(msg tea.Msg) tea.Cmd {
 }
 
 // View renders the text area in its current state.
-func (m *Model) View() string {
+func (m *implementation) View() string {
 	if m.GetValue() == "" && m.row == 0 && m.col == 0 && m.Placeholder != "" {
 		return m.placeholderView()
 	}
@@ -546,7 +544,7 @@ func (m *Model) View() string {
 
 // repositionView repositions the view of the viewport based on the defined
 // scrolling behavior.
-func (m *Model) repositionView() {
+func (m *implementation) repositionView() {
 	min := m.viewport.YOffset
 	max := min + m.viewport.Height - 1
 
@@ -557,7 +555,7 @@ func (m *Model) repositionView() {
 	}
 }
 
-func (m *Model) getPromptString(displayLine int) (prompt string) {
+func (m *implementation) getPromptString(displayLine int) (prompt string) {
 	prompt = m.Prompt
 	if m.promptFunc == nil {
 		return prompt
@@ -571,7 +569,7 @@ func (m *Model) getPromptString(displayLine int) (prompt string) {
 }
 
 // placeholderView returns the prompt and placeholder view, if any.
-func (m *Model) placeholderView() string {
+func (m *implementation) placeholderView() string {
 	var (
 		s     strings.Builder
 		p     = rw.Truncate(m.Placeholder, m.width, "...")
@@ -612,7 +610,7 @@ func (m *Model) placeholderView() string {
 
 // cursorLineNumber returns the line number that the cursor is on.
 // This accounts for soft wrapped lines.
-func (m *Model) cursorLineNumber() int {
+func (m *implementation) cursorLineNumber() int {
 	line := 0
 	for i := 0; i < m.row; i++ {
 		// Calculate the number of lines that the current line will be split

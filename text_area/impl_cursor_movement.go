@@ -8,7 +8,7 @@ import (
 
 // MoveCursorDown moves the cursor down by one line.
 // Returns whether or not the cursor blink should be reset.
-func (m *Model) MoveCursorDown(bindToLine bool) {
+func (m *implementation) MoveCursorDown(bindToLine bool) {
 	li := m.GetLineInfo()
 	charOffset := bubble_bath.GetMaxInt(m.lastCharOffset, li.CharOffset)
 	m.lastCharOffset = charOffset
@@ -50,7 +50,7 @@ func (m *Model) MoveCursorDown(bindToLine bool) {
 
 // MoveCursorUp moves the cursor up by one line.
 // If bindToLine is set, the cursor will not move past the last character of the line
-func (m *Model) MoveCursorUp(bindToLine bool) {
+func (m *implementation) MoveCursorUp(bindToLine bool) {
 	li := m.GetLineInfo()
 	charOffset := bubble_bath.GetMaxInt(m.lastCharOffset, li.CharOffset)
 	m.lastCharOffset = charOffset
@@ -92,7 +92,7 @@ func (m *Model) MoveCursorUp(bindToLine bool) {
 
 // SetCursorColumn moves the cursor to the given position. If the position is
 // out of bounds the cursor will be moved to the start or end accordingly.
-func (m *Model) SetCursorColumn(col int) {
+func (m *implementation) SetCursorColumn(col int) {
 	m.col = bubble_bath.Clamp(col, 0, len(m.value[m.row]))
 	// Any time that we move the cursor horizontally we need to reset the last
 	// offset so that the horizontal position when navigating is adjusted.
@@ -100,13 +100,13 @@ func (m *Model) SetCursorColumn(col int) {
 }
 
 // MoveCursorToLineStart moves the cursor to the start of the input field.
-func (m *Model) MoveCursorToLineStart() {
+func (m *implementation) MoveCursorToLineStart() {
 	m.SetCursorColumn(0)
 }
 
 // MoveCursorToLineEnd moves the cursor to the end of the input field.
 // If bindToLine is set, only allow going to the last char of the line
-func (m *Model) MoveCursorToLineEnd(bindToLine bool) {
+func (m *implementation) MoveCursorToLineEnd(bindToLine bool) {
 	newPosition := len(m.value[m.row])
 	if bindToLine {
 		newPosition--
@@ -114,7 +114,7 @@ func (m *Model) MoveCursorToLineEnd(bindToLine bool) {
 	m.SetCursorColumn(newPosition)
 }
 
-func (m *Model) SetCursorRow(targetRow int) {
+func (m *implementation) SetCursorRow(targetRow int) {
 	targetRow = bubble_bath.Clamp(targetRow, 0, len(m.value)-1)
 
 	adjustmentNeeded := targetRow - m.row
@@ -131,17 +131,17 @@ func (m *Model) SetCursorRow(targetRow int) {
 	m.repositionView()
 }
 
-func (m *Model) MoveCursorToFirstRow() {
+func (m *implementation) MoveCursorToFirstRow() {
 	m.SetCursorRow(0)
 }
 
-func (m *Model) MoveCursorToLastRow() {
+func (m *implementation) MoveCursorToLastRow() {
 	m.SetCursorRow(len(m.value) - 1)
 }
 
 // MoveCursorRightOneRune moves the cursor one character to the right.
 // If bindToLine is set, the cursor will not move psat the last character of the line
-func (m *Model) MoveCursorRightOneRune(bindToLine bool) {
+func (m *implementation) MoveCursorRightOneRune(bindToLine bool) {
 	moveRightLimit := len(m.value[m.row])
 	if bindToLine {
 		moveRightLimit--
@@ -154,13 +154,13 @@ func (m *Model) MoveCursorRightOneRune(bindToLine bool) {
 // MoveCursorLeftOneRune moves the cursor one character to the left.
 // If insideLine is set, the cursor is moved to the last
 // character in the previous line, instead of one past that.
-func (m *Model) MoveCursorLeftOneRune() {
+func (m *implementation) MoveCursorLeftOneRune() {
 	if m.col > 0 {
 		m.SetCursorColumn(m.col - 1)
 	}
 }
 
-func (m *Model) MoveCursorByWord(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition) {
+func (m *implementation) MoveCursorByWord(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition) {
 	m.doWordwiseMovement(direction, stopPosition)
 }
 
@@ -169,7 +169,7 @@ func (m *Model) MoveCursorByWord(direction CursorMovementDirection, stopPosition
 //	Private Helper Functions
 //
 // ====================================================================================================
-func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition) {
+func (m *implementation) doWordwiseMovement(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition) {
 	// This function utilizes the insight that the textarea string can be thought of as a "tape" of words, joined by whitespace
 	// With this insight, we can handle both (left,right) and (word_start,word_end) by simply sliding along the tape in
 	// the appropriate direction looking for the sequence we want
@@ -279,7 +279,7 @@ func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPositi
 	}
 }
 
-func (m *Model) doCharacterwiseMovement(targetChar rune, direction CursorMovementDirection, stopPosition CharacterwiseMovementStopPosition) {
+func (m *implementation) doCharacterwiseMovement(targetChar rune, direction CursorMovementDirection, stopPosition CharacterwiseMovementStopPosition) {
 	directionMultiplier := int(direction)
 
 	stopPositionOffset := int(stopPosition)
