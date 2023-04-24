@@ -32,7 +32,7 @@ type Component interface {
 	DeleteLine()
 	ClearLine()
 
-	/* ---- linewise cursor movement ----- */
+	/* ---- cursor movement ----- */
 
 	SetCursorColumn(col int)
 	MoveCursorDown(bindToLine bool)
@@ -42,8 +42,6 @@ type Component interface {
 	MoveCursorRightOneRune(bindToLine bool)
 	MoveCursorLeftOneRune()
 	MoveCursorByWord(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition)
-
-	/* ----- row-wise cursor movement ----- */
 
 	SetCursorRow(targetRow int)
 	MoveCursorToFirstRow()
