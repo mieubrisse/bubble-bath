@@ -19,12 +19,11 @@ import (
 type CursorMovementDirection int
 
 const (
-	CursorMovementDirection_Left  CursorMovementDirection = -1
-	CursorMovementDirection_Right CursorMovementDirection = 1
+	Left  CursorMovementDirection = -1
+	Right CursorMovementDirection = 1
 )
 
-// The position in the word that the cursor will stop at *IN THE DIRECTION OF CURSOR TRAVEL*
-// E.g.
+// WordwiseMovementStopPosition is the position in the word that the cursor will stop at *IN THE DIRECTION OF CURSOR TRAVEL*
 type WordwiseMovementStopPosition int
 
 const (
@@ -34,22 +33,23 @@ const (
 	// If we're going left, "incident" = *end* of word, and "terminus" = beginning of word
 	// We used "incident" and "terminus" to avoid confusion with "start" and "end" when going left
 
-	// WordwiseMovementStopPosition_Incidence tells the cursor to stop as soon as hit a word (in direction of cursor travel)
-	WordwiseMovementStopPosition_Incidence WordwiseMovementStopPosition = -1
+	// Incidence tells the cursor to stop as soon as hit a word (in direction of cursor travel)
+	Incidence WordwiseMovementStopPosition = -1
 
-	// WordwiseMovementStopPosition_Terminus tells the cursor to stop as soon as it would leave a word (in direction of cursor travel)
-	WordwiseMovementStopPosition_Terminus WordwiseMovementStopPosition = 1
+	// Terminus tells the cursor to stop as soon as it would leave a word (in direction of cursor travel)
+	Terminus WordwiseMovementStopPosition = 1
 )
 
-// When moving the cursor by a given character, the position where the cursor will stop relative to the character
+// CharacterwiseMovementStopPosition is the position that the character will stop when doing characterwise movement, as
+// determined by the direction of travel
 type CharacterwiseMovementStopPosition int
 
 const (
-	// Stop on the character (corresponds to 'f' in Vim)
-	CharacterwiseMovementStopPosition_On = 0
+	// On stops on the character (corresponds to 'f' in Vim)
+	On = 0
 
-	// Stop just before the character (corresponds to 't' in Vim)
-	CharacterwiseMovementStopPosition_Before = 1
+	// Before stops one character before the target character (corresponds to 't' in Vim)
+	Before = 1
 )
 
 const (
@@ -435,7 +435,7 @@ func (m *Model) DeleteAfterCursor() {
 	m.SetCursorColumn(len(m.value[m.row]) - 1)
 }
 
-// Deletes the single character on the cursor
+// DeleteOnCursor deletes the single character on the cursor
 // Returnst he rune that was deleted (if any)
 func (m *Model) DeleteOnCursor() []rune {
 	currentRow := m.value[m.row]
@@ -480,11 +480,6 @@ func (m *Model) MoveCursorLeftOneRune() {
 
 func (m *Model) MoveCursorByWord(direction CursorMovementDirection, stopPosition WordwiseMovementStopPosition) {
 	m.doWordwiseMovement(direction, stopPosition)
-}
-
-// Moves the cursor in the direction of travel to the specified character
-func (m *Model) MoveCursorByCharacter(direction CursorMovementDirection, char rune) {
-
 }
 
 func (m *Model) InsertLineAbove() {
@@ -543,7 +538,7 @@ func (m *Model) ClearLine() {
 	m.SetCursorColumn(0)
 }
 
-// LineInfo returns the number of characters from the start of the
+// GetLineInfo returns the number of characters from the start of the
 // (soft-wrapped) line and the (soft-wrapped) line width.
 func (m *Model) GetLineInfo() LineInfo {
 	grid := wrap(m.value[m.row], m.width)
@@ -727,7 +722,7 @@ func (m *Model) Update(msg tea.Msg) tea.Cmd {
 			// almost definitely in insert mode
 			m.MoveCursorDown(false)
 		case key.Matches(msg, m.KeyMap.WordForward):
-			m.MoveCursorByWord(CursorMovementDirection_Right, WordwiseMovementStopPosition_Incidence)
+			m.MoveCursorByWord(Right, Incidence)
 		case key.Matches(msg, m.KeyMap.Paste):
 			return Paste
 		case key.Matches(msg, m.KeyMap.CharacterBackward):
@@ -738,7 +733,7 @@ func (m *Model) Update(msg tea.Msg) tea.Cmd {
 			m.MoveCursorUp(false)
 		case key.Matches(msg, m.KeyMap.WordBackward):
 			// Note that "End" here is actually the start of the word
-			m.MoveCursorByWord(CursorMovementDirection_Left, WordwiseMovementStopPosition_Terminus)
+			m.MoveCursorByWord(Left, Terminus)
 		case key.Matches(msg, m.KeyMap.InputBegin):
 			m.moveToBegin()
 		case key.Matches(msg, m.KeyMap.InputEnd):
@@ -854,7 +849,7 @@ func (m *Model) View() string {
 		displayLine++
 
 		if m.ShowLineNumbers {
-			lineNumber := m.style.EndOfBuffer.Render((fmt.Sprintf(m.lineNumberFormat, string(m.EndOfBufferCharacter))))
+			lineNumber := m.style.EndOfBuffer.Render(fmt.Sprintf(m.lineNumberFormat, string(m.EndOfBufferCharacter)))
 			s.WriteString(lineNumber)
 		}
 		s.WriteRune('\n')
@@ -890,7 +885,7 @@ func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPositi
 
 	// Figure out what the row index of each end of the tape is
 	limitRowIndex := len(m.value) - 1
-	if direction == CursorMovementDirection_Left {
+	if direction == Left {
 		limitRowIndex = 0
 	}
 
@@ -901,7 +896,7 @@ func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPositi
 	// Therefore, let's first calculate the boundary beyond which we know
 	// that the proposed column is off the edge of the line
 	limitColIndex := len(m.value[m.row]) - 1
-	if direction == CursorMovementDirection_Left {
+	if direction == Left {
 		limitColIndex = 0
 	}
 
@@ -923,7 +918,7 @@ func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPositi
 			// We still have at least one more line, so let's use it (which means we're crossing a newline char which
 			// means we're crossing a word boundary)
 			m.row += directionMultiplier
-			if direction == CursorMovementDirection_Right {
+			if direction == Right {
 				nextColIdx = 0
 			} else {
 				nextColIdx = len(m.value[m.row]) - 1
@@ -953,7 +948,7 @@ func (m *Model) doWordwiseMovement(direction CursorMovementDirection, stopPositi
 		// This happens if we're moving right but we're stopping at word incidence, OR if we're moving left and stopping at word terminus
 		// NOTE: This is actually an XOR
 		var adjacentColLimitIndex int
-		if ((direction == CursorMovementDirection_Right) && (stopPosition == WordwiseMovementStopPosition_Terminus)) || ((direction == CursorMovementDirection_Left) && (stopPosition == WordwiseMovementStopPosition_Incidence)) {
+		if ((direction == Right) && (stopPosition == Terminus)) || ((direction == Left) && (stopPosition == Incidence)) {
 			// The adjacent col limit index will be the list's right limit
 			adjacentColLimitIndex = len(m.value[m.row]) - 1
 		} else {
@@ -1309,11 +1304,6 @@ func (m *Model) placeholderView() string {
 
 	m.viewport.SetContent(s.String())
 	return m.style.Base.Render(m.viewport.View())
-}
-
-// Blink returns the blink command for the cursor.
-func Blink() tea.Msg {
-	return cursor.Blink()
 }
 
 // cursorLineNumber returns the line number that the cursor is on.
