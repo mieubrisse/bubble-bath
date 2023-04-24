@@ -2,6 +2,7 @@ package filterable_list_item
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	bubble_bath "github.com/mieubrisse/bubble-bath"
 )
 
 var defaultHighlightedItemStyle = lipgloss.NewStyle().Background(lipgloss.Color("#282828")).Bold(true)
@@ -12,7 +13,7 @@ type implementation struct {
 	// lipgloss.Style to apply to items that are highlighted
 	HighlightedItemStyle lipgloss.Style
 
-	innerComponent Component
+	innerComponent bubble_bath.Component
 
 	value string
 
@@ -21,7 +22,7 @@ type implementation struct {
 	height        int
 }
 
-func New(innerComponent Component, value string) Component {
+func New(innerComponent bubble_bath.Component, value string) Component {
 	return &implementation{
 		HighlightedItemStyle: defaultHighlightedItemStyle,
 		innerComponent:       innerComponent,
@@ -32,7 +33,7 @@ func New(innerComponent Component, value string) Component {
 	}
 }
 
-func (impl implementation) View() string {
+func (impl *implementation) View() string {
 	result := impl.innerComponent.View()
 	if impl.isHighlighted {
 		result = impl.HighlightedItemStyle.Render(result)
@@ -46,19 +47,19 @@ func (impl *implementation) Resize(width int, height int) {
 	impl.height = height
 }
 
-func (impl implementation) GetWidth() int {
+func (impl *implementation) GetWidth() int {
 	return impl.width
 }
 
-func (impl implementation) GetHeight() int {
+func (impl *implementation) GetHeight() int {
 	return impl.height
 }
 
-func (impl implementation) GetValue() string {
+func (impl *implementation) GetValue() string {
 	return impl.value
 }
 
-func (impl implementation) IsHighlighted() bool {
+func (impl *implementation) IsHighlighted() bool {
 	return impl.IsHighlighted()
 }
 

@@ -2,7 +2,17 @@ package text_block
 
 import "github.com/charmbracelet/lipgloss"
 
-type impl struct {
+type Option func(*implementation)
+
+func WithStyle(style lipgloss.Style) Option {
+	return func(impl *implementation) {
+		impl.style = style
+	}
+}
+
+type implementation struct {
+	style lipgloss.Style
+
 	contents string
 
 	// TODO add matched char index
@@ -11,35 +21,40 @@ type impl struct {
 	height int
 }
 
-func New(contents string) Component {
-	return &impl{
+func New(contents string, options ...Option) Component {
+	result := &implementation{
+		style:    lipgloss.Style{},
 		contents: contents,
 		width:    0,
 		height:   0,
 	}
+	for _, opt := range options {
+		opt(result)
+	}
+	return result
 }
 
-func (item *impl) GetContents() string {
+func (item *implementation) GetContents() string {
 	return item.contents
 }
 
-func (item *impl) View() string {
+func (item *implementation) View() string {
 	// TODO add the nice '...' for when the item is cut off
-	return lipgloss.NewStyle().
+	return item.style.
 		MaxWidth(item.width).
 		MaxHeight(item.height).
 		Render(item.contents)
 }
 
-func (item *impl) Resize(width int, height int) {
+func (item *implementation) Resize(width int, height int) {
 	item.width = width
 	item.height = height
 }
 
-func (item *impl) GetWidth() int {
+func (item *implementation) GetWidth() int {
 	return item.width
 }
 
-func (item *impl) GetHeight() int {
+func (item *implementation) GetHeight() int {
 	return item.height
 }

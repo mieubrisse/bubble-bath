@@ -39,7 +39,8 @@ func Paste() tea.Msg {
 type pasteMsg string
 type pasteErrMsg struct{ error }
 
-// implementation is the Bubble Tea model for this text area element.
+// implementation is a heavily-modified fork of textarea.Model, refactored
+// to be more readable and work with the Bubble Bath framework
 type implementation struct {
 	Err error
 

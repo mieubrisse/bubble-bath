@@ -1,26 +1,53 @@
 Bubble Bath
 ===========
-Bubble Bath is a component framework for [Charm's excellent BubbleTea framework](https://github.com/charmbracelet/bubbletea) that's intended to make writing components (Bubbles) easier.
+Bubble Bath is a component framework for [Charm's excellent BubbleTea framework](https://github.com/charmbracelet/bubbletea) that's intended to make writing components (Bubbles) easier, particularly for fullscreen TUIs.
 
 Get Started
 -----------
-TODO
+Write a component that satisfies `InteractiveComponent` interface:
+
+```go
+import bubble_bath "github.com/mieubrisse/bubble-bath"
+
+type MyApp interface {
+    bubble_bath.InteractiveComponent
+}
+```
+
+```go
+import bubble_bath "github.com/mieubrisse/bubble-bath"
+
+// Implementation of MyApp
+type implementation interface {
+    bubble_bath.InteractiveComponent
+}
+
+func New() MyApp {
+
+}
+```
+
+Then use it in your `main.go`:
+
+Tips
+----
+- For each component you create, create a public interface and a private implementation
+- Keep each component in its own package (directory)
 
 What's Inside
 -------------
-1. A `NewProgram` function intended to produce a `tea.Model` for slotting into `tea.NewProgram`
-1. A `Component` interface with:
-    1. A `View`, so that it's standardized
-    1. `Resize`, `GetHeight`, and `GetWidth` functions
-1. An `InteractiveComponent`  interface with:
+1. `RunBubbleBathProgram`, a wrapper over `tea.NewProgram().Run()` with sane defaults (e.g. handles resizes and quit events out of the box)
+1. If you'd prefer not to use `RunBubbleBathProgram`, a `NewBubbleBathModel` function to create a `tea.Model` for use with `tea.NewProgram`
+1. A `Component` interface with standardized `View`, `Resize`, `GetHeight`, and `GetWidth` functions
+1. An `InteractiveComponent` interface with:
     1. A by-reference `Update(msg tea.Msg)` function, so component updating is by-reference. This sacrifices pure Redux-like state machine transitioning, but I don't need/use that right now and should make everything faster (because less by-value copying). If I need the Redux-like state machine transitioning I'll figure out a way to do it.
     1. Standardized `SetFocus` and `IsFocused` functions
 1. Several out-of-the-box components conforming to `Component` that can be used to build other components:
     1. Text block
     1. Text input
-    1. Input area with Vim bindings
-    1. Filterable list
-    1. Filterable list item
+    1. Text area
+    1. Text area with Vim bindings
+    1. Filterable list (which can handle nested inputs)
     1. Filterable checklist
 1. Several helper methods (e.g. `GetMinInt`, `GetMaxInt`, etc.)
 
