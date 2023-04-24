@@ -7,6 +7,25 @@ import (
 	"math"
 )
 
+const (
+	defaultShouldHandleChildrenFocus = true
+)
+
+// TODO Remove this; I'm not happy about these options (should probably just be setters)
+type FlexboxOption func(*implementation)
+
+func WithDirection(direction LayoutDirection) FlexboxOption {
+	return func(impl *implementation) {
+		impl.direction = direction
+	}
+}
+
+func WithChildFocusManaging(shouldManageChildrenFocus bool) FlexboxOption {
+	return func(impl *implementation) {
+		impl.shouldManageChildrenFocus = shouldManageChildrenFocus
+	}
+}
+
 type LayoutDirection int
 
 const (
@@ -33,25 +52,61 @@ type implementation struct {
 
 	direction LayoutDirection
 
-	// "Set" of children that should receive events
-	focusedChildIndexes map[int]bool
+	// "Set" of children that should receive events when the flexbox is focused
+	focusReceivingChildrenIndexes map[int]bool
+
+	// If true, the flexbox will focus and unfocus children when the flexbox itself is focused or unfocused
+	shouldManageChildrenFocus bool
 
 	isFocused bool
 	width     int
 	height    int
 }
 
-func New(items []FlexItem, direction LayoutDirection) Component {
-	return &implementation{
-		items:     items,
-		direction: direction,
+// New constructs a new flexbox Component
+// As a convenience, if child focus management is enabled and any of the children are focused then:
+// - those children will be set to receive focus from the flexbox
+// - the flexbox's focus state will be set to true
+func New(items []FlexItem, options ...FlexboxOption) Component {
+	impl := &implementation{
+		items:                         items,
+		direction:                     Horizontal,
+		focusReceivingChildrenIndexes: map[int]bool{},
+		shouldManageChildrenFocus:     defaultShouldHandleChildrenFocus,
+		isFocused:                     false,
+		width:                         0,
+		height:                        0,
 	}
+	for _, opt := range options {
+		opt(impl)
+	}
+
+	if impl.shouldManageChildrenFocus {
+		newFocusReceivingChildrenIndexes := map[int]bool{}
+		for idx, item := range impl.items {
+			switch component := item.Component.(type) {
+			case bubble_bath.InteractiveComponent:
+				if component.IsFocused() {
+					newFocusReceivingChildrenIndexes[idx] = true
+					impl.isFocused = true
+				}
+			}
+		}
+	}
+
+	impl.alignChildFocusesIfNecessary()
+
+	return impl
 }
 
 func (i implementation) Update(msg tea.Msg) tea.Cmd {
+	if !i.isFocused {
+		return nil
+	}
+
 	cmds := make([]tea.Cmd, 0)
 	for idx, item := range i.items {
-		if _, found := i.focusedChildIndexes[idx]; !found {
+		if _, found := i.focusReceivingChildrenIndexes[idx]; !found {
 			continue
 		}
 
@@ -64,7 +119,6 @@ func (i implementation) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (i implementation) View() string {
-
 	// For coercing down the size of any unruly children who try to grow too big
 	var bully func(string, int) string
 	if i.direction == Horizontal {
@@ -104,8 +158,9 @@ func (i implementation) View() string {
 		Render(result)
 }
 
-func (i *implementation) SetFocusedChildren(focusedChildrenIndexSet map[int]bool) {
-	i.focusedChildIndexes = focusedChildrenIndexSet
+func (i *implementation) SetFocusReceivingChildren(focusedChildrenIndexSet map[int]bool) {
+	i.focusReceivingChildrenIndexes = focusedChildrenIndexSet
+	i.alignChildFocusesIfNecessary()
 }
 
 func (i implementation) Resize(width int, height int) {
@@ -140,7 +195,7 @@ func (i implementation) GetHeight() int {
 
 func (i *implementation) SetFocus(isFocused bool) tea.Cmd {
 	i.isFocused = isFocused
-	return nil
+	return i.alignChildFocusesIfNecessary()
 }
 
 func (i *implementation) IsFocused() bool {
@@ -190,4 +245,29 @@ func (i implementation) calculateChildSizes() []int {
 	}
 
 	return results
+}
+
+// Idempotently aligns children to the right focus state
+func (i *implementation) alignChildFocusesIfNecessary() tea.Cmd {
+	if !i.shouldManageChildrenFocus {
+		return nil
+	}
+
+	cmds := make([]tea.Cmd, 0)
+	for idx, item := range i.items {
+		switch component := item.Component.(type) {
+		case bubble_bath.InteractiveComponent:
+			_, canChildReceiveFocus := i.focusReceivingChildrenIndexes[idx]
+
+			shouldChildBeFocused := canChildReceiveFocus && i.isFocused
+
+			// Skip sending the focus event for children that are already in the desired state
+			if component.IsFocused() == shouldChildBeFocused {
+				continue
+			}
+
+			cmds = append(cmds, component.SetFocus(shouldChildBeFocused))
+		}
+	}
+	return tea.Batch(cmds...)
 }

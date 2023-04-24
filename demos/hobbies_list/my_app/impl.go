@@ -5,13 +5,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mieubrisse/bubble-bath/filterable_list"
 	"github.com/mieubrisse/bubble-bath/filterable_list_item"
+	"github.com/mieubrisse/bubble-bath/flexbox"
 	"github.com/mieubrisse/bubble-bath/text_block"
 )
 
 type implementation struct {
-	title text_block.Component
-
-	hobbies filterable_list.Component[filterable_list_item.Component]
+	hobbiesAndTitle flexbox.Component
 
 	width  int
 	height int
@@ -30,29 +29,40 @@ func New() MyApp {
 	hobbiesList.SetItems(hobbies)
 	hobbiesList.SetFocus(true)
 
+	// Will flexibly resize as needed
+	hobbiesAndTitle := flexbox.New(
+		[]flexbox.FlexItem{
+			{
+				Component: title,
+				FixedSize: 1,
+			},
+			{
+				Component:  hobbiesList,
+				FlexWeight: 1,
+			},
+		},
+		flexbox.WithDirection(flexbox.Vertical),
+	)
+
 	return &implementation{
-		title:   title,
-		hobbies: hobbiesList,
+		hobbiesAndTitle: hobbiesAndTitle,
+		width:           0,
+		height:          0,
 	}
 }
 
 func (i implementation) Update(msg tea.Msg) tea.Cmd {
-	return i.hobbies.Update(msg)
+	return i.hobbiesAndTitle.Update(msg)
 }
 
 func (i implementation) View() string {
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		i.title.View(),
-		i.hobbies.View(),
-	)
+	return i.hobbiesAndTitle.View()
 }
 
 func (i *implementation) Resize(width int, height int) {
 	i.width = width
 	i.height = height
-	i.title.Resize(width, 1)
-	i.hobbies.Resize(width, height-1)
+	i.hobbiesAndTitle.Resize(width, height)
 }
 
 func (i *implementation) GetWidth() int {

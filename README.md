@@ -43,6 +43,7 @@ What's Inside
     1. A by-reference `Update(msg tea.Msg)` function, so component updating is by-reference. This sacrifices pure Redux-like state machine transitioning, but I don't need/use that right now and should make everything faster (because less by-value copying). If I need the Redux-like state machine transitioning I'll figure out a way to do it.
     1. Standardized `SetFocus` and `IsFocused` functions
 1. Several out-of-the-box components conforming to `Component` that can be used to build other components:
+    1. Flexbox, which allows mixed fixed-size and flexing items
     1. Text block
     1. Text input
     1. Text area
@@ -80,8 +81,7 @@ Unsolved Problems
 -----------------
 These are problems this system doesn't yet solve but I'd like it to:
 
-- A Flexbox component would make layout _so_ much easier.
-- Sizing is strictly top-down: the parent component receives a message, and it tells children what size they should be. There's no way for children components to suggest sizes back up the tree, like the web has with intrinsic vs extrinsic sizes.
+- Sizing is strictly top-down: the parent component receives a message, and it tells children what size they should be. There's no way for children components to suggest sizes back up the tree, like the web has with intrinsic vs extrinsic sizes. This would be particularly useful with the flexbox component.
 - Due to everything in BubbleTea being strings, the layout of a component (width, height, padding, margin) and its styling (colors, bold, etc.) are deeply coupled. It seems like these should be decoupled - maybe by building in a DOM-like abstraction with the terminal equivalent of CSS.
 
 Aside: as I built this, I (a backend programmer) started to deeply grok the web.
