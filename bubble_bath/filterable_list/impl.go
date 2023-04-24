@@ -8,9 +8,7 @@ import (
 	"strings"
 )
 
-/*
-Component for displaying a scrollable, filterable list of items
-*/
+// This is an implementation of a filterable, scrollable list
 type implementation[T filterable_list_item.Component] struct {
 	unfilteredItems []T
 
@@ -39,12 +37,6 @@ func (impl implementation[T]) View() string {
 	if len(impl.filteredItemsOriginalIndices) == 0 {
 		return ""
 	}
-
-	/*
-		baseLineStyle := lipgloss.NewStyle().
-			Width(impl.width)
-
-	*/
 
 	// As aesthetic choices, when there are more item lines than display lines:
 	// 1. We want the entire list to scroll around the cursor if it's in the center of the screen, rather than
@@ -80,23 +72,11 @@ func (impl implementation[T]) View() string {
 
 	displayedItems := impl.filteredItemsOriginalIndices[firstDisplayedLineIdxInclusive:lastDisplayedLineIdxExclusive]
 
-	// viewableLinesHighlightedItemIdx := impl.highlightedItemIdx - firstDisplayedLineIdxInclusive
-
 	resultLines := []string{}
 	for _, originalItemIdx := range displayedItems {
 		item := impl.unfilteredItems[originalItemIdx]
 
-		/*
-			lineStyle := baseLineStyle
-			if impl.isFocused && idx == viewableLinesHighlightedItemIdx {
-				// NOTE: this _may_ mess up the styling of the inner stuff
-				lineStyle = baseLineStyle.Copy().Background(global_styles.FocusedComponentBackgroundColor).Bold(true)
-			}
-			renderedLine := lineStyle.Render(item.View())
-
-		*/
 		renderedLine := item.View()
-
 		resultLines = append(resultLines, renderedLine)
 	}
 
@@ -140,7 +120,7 @@ func (impl *implementation[T]) Update(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-func (impl *implementation[T]) UpdateFilter(newFilter func(idx int, item T) bool) {
+func (impl *implementation[T]) UpdateFilter(newFilter func(idx int, item T) bool, shouldPreserveHighlight bool) {
 	// This is a hack to indicate "the filtered list was empty, so there's no highlighted item original idx"
 	oldHighlightedItemOriginalIdx := -1
 
@@ -160,10 +140,7 @@ func (impl *implementation[T]) UpdateFilter(newFilter func(idx int, item T) bool
 		if newFilter(idx, item) {
 			newFilteredItemOriginalIndices = append(newFilteredItemOriginalIndices, idx)
 
-			// TODO maybe remove the highlight-preserving??? Seems confusing
-			// If the previously-highlighted item also exists in the post-filter list,
-			// leave it highlighted
-			if idx == oldHighlightedItemOriginalIdx {
+			if shouldPreserveHighlight && idx == oldHighlightedItemOriginalIdx {
 				newHighlightedItemIdx = len(newFilteredItemOriginalIndices) - 1
 			}
 		}
@@ -197,8 +174,6 @@ func (impl *implementation[T]) SetItems(items []T) {
 	}
 }
 
-// Scrolls the highlighted selection down or up by the specified number of items, with safeguards to
-// prevent scrolling off the ends of the list
 func (impl *implementation[T]) Scroll(scrollOffset int) {
 	newHighlightedItemIdx := impl.highlightedItemIdx + scrollOffset
 	if newHighlightedItemIdx < 0 {
@@ -257,13 +232,8 @@ func (impl implementation[T]) GetWidth() int {
 	return impl.width
 }
 
-func (impl *implementation[T]) Focus() tea.Cmd {
-	impl.isFocused = true
-	return nil
-}
-
-func (impl *implementation[T]) Blur() tea.Cmd {
-	impl.isFocused = false
+func (impl *implementation[T]) SetFocus(isFocused bool) tea.Cmd {
+	impl.isFocused = isFocused
 	return nil
 }
 

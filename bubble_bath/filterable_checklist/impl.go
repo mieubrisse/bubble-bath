@@ -19,7 +19,6 @@ type implementation[T filterable_checklist_item.Component] struct {
 	height    int
 }
 
-// TODO get rid of items in constructor
 func New[T filterable_checklist_item.Component]() Component[T] {
 	inner := filterable_list.New[T]()
 	return &implementation[T]{
@@ -53,7 +52,7 @@ func (impl *implementation[T]) Update(msg tea.Msg) tea.Cmd {
 	var returnCmd tea.Cmd
 	castedMsg := msg.(tea.KeyMsg)
 	switch castedMsg.String() {
-	case "x":
+	case "x", "enter":
 		impl.ToggleHighlightedItemSelection()
 	case "s":
 		impl.SetAllViewableItemsSelection(true)
@@ -145,15 +144,9 @@ func (impl implementation[T]) GetWidth() int {
 	return impl.width
 }
 
-func (impl *implementation[T]) SetFocus() tea.Cmd {
-	impl.isFocused = true
-
-	return impl.innerList.Focus()
-}
-
-func (impl *implementation[T]) Blur() tea.Cmd {
-	impl.isFocused = false
-	return impl.innerList.Blur()
+func (impl *implementation[T]) SetFocus(isFocused bool) tea.Cmd {
+	impl.isFocused = isFocused
+	return nil
 }
 
 func (impl implementation[T]) IsFocused() bool {
