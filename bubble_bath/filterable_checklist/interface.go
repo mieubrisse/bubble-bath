@@ -1,13 +1,13 @@
 package filterable_checklist
 
 import (
-	"github.com/mieubrisse/bubble-bath/components"
-	"github.com/mieubrisse/bubble-bath/components/filterable_checklist_item"
-	"github.com/mieubrisse/bubble-bath/components/filterable_list"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_checklist_item"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list"
 )
 
 type Component[T filterable_checklist_item.Component] interface {
-	components.InteractiveComponent
+	bubble_bath.InteractiveComponent
 
 	// Used for manipulations of the inner list (no need to reimplement all the functions)
 	// The items in the original list will match the items from GetItems

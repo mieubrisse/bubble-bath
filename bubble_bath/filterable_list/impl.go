@@ -3,8 +3,8 @@ package filterable_list
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/components/filterable_list_item"
-	"github.com/mieubrisse/bubble-bath/helpers"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list_item"
 	"strings"
 )
 
@@ -58,18 +58,18 @@ func (impl implementation[T]) View() string {
 	halfHeight := impl.height / 2
 
 	// Ensure that, when near the bottom of the list, the cursor is no longer centered and scrolls to the bottom
-	firstDisplayedLineIdxInclusive := helpers.GetMinInt(
+	firstDisplayedLineIdxInclusive := bubble_bath.GetMinInt(
 		impl.highlightedItemIdx-halfHeight,
 		len(impl.filteredItemsOriginalIndices)-impl.height,
 	)
 
 	// Ensure that, when near the top of the list, the cursor is no longer centered and scrolls to the top
-	firstDisplayedLineIdxInclusive = helpers.GetMaxInt(
+	firstDisplayedLineIdxInclusive = bubble_bath.GetMaxInt(
 		firstDisplayedLineIdxInclusive,
 		0,
 	)
 
-	lastDisplayedLineIdxExclusive := helpers.GetMinInt(
+	lastDisplayedLineIdxExclusive := bubble_bath.GetMinInt(
 		len(impl.filteredItemsOriginalIndices),
 		firstDisplayedLineIdxInclusive+impl.height,
 	)
@@ -267,6 +267,6 @@ func (impl *implementation[T]) Blur() tea.Cmd {
 	return nil
 }
 
-func (impl implementation[T]) Focused() bool {
+func (impl implementation[T]) IsFocused() bool {
 	return impl.isFocused
 }

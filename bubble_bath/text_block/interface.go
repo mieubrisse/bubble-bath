@@ -1,11 +1,11 @@
 package text_block
 
 import (
-	"github.com/mieubrisse/bubble-bath/components"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
 )
 
 type Component interface {
-	components.Component
+	bubble_bath.InteractiveComponent
 
 	// TODO remove this??
 	GetContents() string

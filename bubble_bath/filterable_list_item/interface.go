@@ -1,12 +1,12 @@
 package filterable_list_item
 
 import (
-	"github.com/mieubrisse/bubble-bath/components"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
 )
 
 // This interface can be reimplemented for more interesting usecases
 type Component interface {
-	components.Component
+	bubble_bath.InteractiveComponent
 
 	IsHighlighted() bool
 	SetHighlighted(isHighlighted bool)

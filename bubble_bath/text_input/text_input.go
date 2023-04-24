@@ -4,12 +4,14 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/global_styles"
-	"github.com/mieubrisse/bubble-bath/helpers"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
 	"github.com/muesli/ansi"
 )
 
 type Model struct {
+	UnfocusedStyle lipgloss.Style
+	FocusedStyle   lipgloss.Style
+
 	input           textinput.Model
 	foregroundColor lipgloss.Color
 
@@ -46,16 +48,12 @@ func (model *Model) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (model Model) View() string {
-	baseStyle := lipgloss.NewStyle().
-		Width(model.width).
-		Height(model.height).
-		Foreground(model.foregroundColor)
-	if model.input.Focused() {
-		baseStyle = baseStyle.Background(global_styles.FocusedComponentBackgroundColor).Bold(true)
-	}
-
 	// It'd be really nice if textinput.Model allowed us to control the style based on focus, but alas it does not
-	return baseStyle.Render(model.input.View())
+	style := model.UnfocusedStyle
+	if model.input.Focused() {
+		style = model.FocusedStyle
+	}
+	return style.Render(model.input.View())
 }
 
 func (model *Model) SetValue(newValue string) {
@@ -77,7 +75,7 @@ func (model *Model) Blur() tea.Cmd {
 	return nil
 }
 
-func (model Model) Focused() bool {
+func (model Model) IsFocused() bool {
 	return model.isFocused
 }
 
@@ -94,7 +92,7 @@ func (model *Model) Resize(width int, height int) {
 	// I'm not actually sure why we need the extra - 1 here (something to do with how Charm renders the max width); if we
 	// don't have it though, things get weird
 	maxNumDesiredDisplayedChars := width - promptPrintableLength - 1
-	maxNumActualDisplayedChars := helpers.GetMaxInt(0, maxNumDesiredDisplayedChars)
+	maxNumActualDisplayedChars := bubble_bath.GetMaxInt(0, maxNumDesiredDisplayedChars)
 
 	// The width on the Charm input is actually the max number of characters displayed at once NOT including the prompt!
 	// This is why we do all the calculations prior

@@ -1,12 +1,12 @@
 package filterable_list
 
 import (
-	"github.com/mieubrisse/bubble-bath/components"
-	"github.com/mieubrisse/bubble-bath/components/filterable_list_item"
+	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list_item"
 )
 
 type Component[T filterable_list_item.Component] interface {
-	components.InteractiveComponent
+	bubble_bath.InteractiveComponent
 
 	UpdateFilter(newFilter func(idx int, item T) bool)
 	SetItems(items []T)

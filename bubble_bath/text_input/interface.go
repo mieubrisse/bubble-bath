@@ -1,9 +1,9 @@
 package text_input
 
-import "github.com/mieubrisse/bubble-bath/components"
+import "github.com/mieubrisse/bubble-bath/bubble_bath"
 
 type Component interface {
-	components.InteractiveComponent
+	bubble_bath.InteractiveComponent
 
 	GetValue() string
 	SetValue(value string)

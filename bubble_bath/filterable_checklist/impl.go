@@ -2,8 +2,8 @@ package filterable_checklist
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mieubrisse/bubble-bath/components/filterable_checklist_item"
-	"github.com/mieubrisse/bubble-bath/components/filterable_list"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_checklist_item"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list"
 )
 
 type implementation[T filterable_checklist_item.Component] struct {
@@ -145,7 +145,7 @@ func (impl implementation[T]) GetWidth() int {
 	return impl.width
 }
 
-func (impl *implementation[T]) Focus() tea.Cmd {
+func (impl *implementation[T]) SetFocus() tea.Cmd {
 	impl.isFocused = true
 
 	return impl.innerList.Focus()
@@ -156,7 +156,7 @@ func (impl *implementation[T]) Blur() tea.Cmd {
 	return impl.innerList.Blur()
 }
 
-func (impl implementation[T]) Focused() bool {
+func (impl implementation[T]) IsFocused() bool {
 	return impl.isFocused
 }
 

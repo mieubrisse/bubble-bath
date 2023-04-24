@@ -2,7 +2,7 @@ package filterable_list_item
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/components/text_block"
+	"github.com/mieubrisse/bubble-bath/bubble_bath/text_block"
 	"github.com/mieubrisse/bubble-bath/global_styles"
 )
 

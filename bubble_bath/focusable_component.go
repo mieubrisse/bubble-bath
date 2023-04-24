@@ -10,7 +10,6 @@ type InteractiveComponent interface {
 	// (you get into weird situations with generic interfaces, trying to return the model)
 	Update(msg tea.Msg) tea.Cmd
 
-	Focus() tea.Cmd
-	Blur() tea.Cmd
-	Focused() bool
+	SetFocus(isFocused bool) tea.Cmd
+	IsFocused() bool
 }
