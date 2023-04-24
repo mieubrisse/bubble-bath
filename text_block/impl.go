@@ -19,11 +19,11 @@ func New(contents string) Component {
 	}
 }
 
-func (item impl) GetContents() string {
+func (item *impl) GetContents() string {
 	return item.contents
 }
 
-func (item impl) View() string {
+func (item *impl) View() string {
 	// TODO add the nice '...' for when the item is cut off
 	return lipgloss.NewStyle().
 		MaxWidth(item.width).
@@ -36,10 +36,10 @@ func (item *impl) Resize(width int, height int) {
 	item.height = height
 }
 
-func (item impl) GetWidth() int {
+func (item *impl) GetWidth() int {
 	return item.width
 }
 
-func (item impl) GetHeight() int {
+func (item *impl) GetHeight() int {
 	return item.height
 }
