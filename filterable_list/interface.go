@@ -1,8 +1,8 @@
 package filterable_list
 
 import (
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list_item"
+	"github.com/mieubrisse/bubble-bath"
+	"github.com/mieubrisse/bubble-bath/filterable_list_item"
 )
 
 type Component[T filterable_list_item.Component] interface {

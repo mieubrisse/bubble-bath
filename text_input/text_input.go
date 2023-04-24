@@ -4,7 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath"
 	"github.com/muesli/ansi"
 )
 

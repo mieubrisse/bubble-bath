@@ -1,7 +1,7 @@
 package text_block
 
 import (
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath"
 )
 
 type Component interface {

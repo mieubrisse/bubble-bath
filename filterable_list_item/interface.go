@@ -1,7 +1,7 @@
 package filterable_list_item
 
 import (
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
+	"github.com/mieubrisse/bubble-bath"
 )
 
 // This interface can be reimplemented for more interesting usecases

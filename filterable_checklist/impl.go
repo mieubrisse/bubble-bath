@@ -2,12 +2,12 @@ package filterable_checklist
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_checklist_item"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list"
+	"github.com/mieubrisse/bubble-bath/filterable_checklist_item"
+	filterable_list2 "github.com/mieubrisse/bubble-bath/filterable_list"
 )
 
 type implementation[T filterable_checklist_item.Component] struct {
-	innerList filterable_list.Component[T]
+	innerList filterable_list2.Component[T]
 
 	items []T
 
@@ -20,7 +20,7 @@ type implementation[T filterable_checklist_item.Component] struct {
 }
 
 func New[T filterable_checklist_item.Component]() Component[T] {
-	inner := filterable_list.New[T]()
+	inner := filterable_list2.New[T]()
 	return &implementation[T]{
 		innerList:           inner,
 		items:               make([]T, 0),
@@ -81,7 +81,7 @@ func (impl *implementation[T]) SetItems(items []T) {
 	impl.innerList.SetItems(items)
 }
 
-func (impl implementation[T]) GetFilterableList() filterable_list.Component[T] {
+func (impl implementation[T]) GetFilterableList() filterable_list2.Component[T] {
 	return impl.innerList
 }
 

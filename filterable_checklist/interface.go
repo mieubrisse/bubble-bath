@@ -1,9 +1,9 @@
 package filterable_checklist
 
 import (
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_checklist_item"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list"
+	"github.com/mieubrisse/bubble-bath"
+	"github.com/mieubrisse/bubble-bath/filterable_checklist_item"
+	"github.com/mieubrisse/bubble-bath/filterable_list"
 )
 
 type Component[T filterable_checklist_item.Component] interface {

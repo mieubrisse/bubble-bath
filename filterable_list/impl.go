@@ -3,8 +3,8 @@ package filterable_list
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/bubble_bath"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/filterable_list_item"
+	"github.com/mieubrisse/bubble-bath"
+	"github.com/mieubrisse/bubble-bath/filterable_list_item"
 	"strings"
 )
 
