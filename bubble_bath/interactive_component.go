@@ -6,8 +6,8 @@ type InteractiveComponent interface {
 	Component
 
 	// Update updates the model based on the given message
-	// This is expected to be by-reference replacement, because doing by-value is just too messy
-	// (you get into weird situations with generic interfaces, trying to return the model)
+	// We do this by-reference, because by-value is just too messy (see README of this repo)
+	// BLUF: you get into weird situations with generic interfaces
 	Update(msg tea.Msg) tea.Cmd
 
 	SetFocus(isFocused bool) tea.Cmd

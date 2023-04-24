@@ -5,8 +5,8 @@ import (
 )
 
 type Component interface {
-	bubble_bath.InteractiveComponent
+	bubble_bath.Component
 
-	// TODO remove this??
+	// GetContents gets the raw contents of the text block, without truncation
 	GetContents() string
 }

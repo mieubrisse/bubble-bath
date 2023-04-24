@@ -2,41 +2,42 @@ package filterable_list_item
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mieubrisse/bubble-bath/bubble_bath/text_block"
-	"github.com/mieubrisse/bubble-bath/global_styles"
 )
 
-// implementation is a basic implementation of a list item
-// it can be reimplemented as needed
-type implementation struct {
-	innerComponent text_block.Component
+var defaultHighlightedItemStyle = lipgloss.NewStyle().Background(lipgloss.Color("#282828")).Bold(true)
 
-	contents string
+// implementation is a basic implementation of a list item
+// More complex implementations can be created as needed
+type implementation struct {
+	// lipgloss.Style to apply to items that are highlighted
+	HighlightedItemStyle lipgloss.Style
+
+	innerComponent Component
+
+	value string
 
 	isHighlighted bool
 	width         int
 	height        int
 }
 
-func New(contents string) Component {
-	inner := text_block.New(contents)
+func New(innerComponent Component, value string) Component {
 	return &implementation{
-		innerComponent: inner,
-		contents:       contents,
-		isHighlighted:  false,
-		width:          0,
-		height:         0,
+		HighlightedItemStyle: defaultHighlightedItemStyle,
+		innerComponent:       innerComponent,
+		value:                value,
+		isHighlighted:        false,
+		width:                0,
+		height:               0,
 	}
 }
 
 func (impl implementation) View() string {
-	lineStyle := lipgloss.NewStyle()
+	result := impl.innerComponent.View()
 	if impl.isHighlighted {
-		lineStyle = lineStyle.Background(global_styles.FocusedComponentBackgroundColor).Bold(true)
+		result = impl.HighlightedItemStyle.Render(result)
 	}
-
-	// TODO do the cute little '...' cutoff
-	return lineStyle.Render(impl.innerComponent.View())
+	return result
 }
 
 func (impl *implementation) Resize(width int, height int) {
@@ -54,7 +55,7 @@ func (impl implementation) GetHeight() int {
 }
 
 func (impl implementation) GetValue() string {
-	return impl.contents
+	return impl.value
 }
 
 func (impl implementation) IsHighlighted() bool {
