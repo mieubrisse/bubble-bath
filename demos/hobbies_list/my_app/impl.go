@@ -17,8 +17,8 @@ type implementation struct {
 }
 
 func New() MyApp {
-	titleStyle := lipgloss.NewStyle().Bold(true)
-	title := text_block.New("My hobbies:", text_block.WithStyle(titleStyle))
+	hobbiesListTitleStyle := lipgloss.NewStyle().Bold(true)
+	hobbiesListTitle := text_block.New("My hobbies:", text_block.WithStyle(hobbiesListTitleStyle))
 
 	hobbies := []filterable_list_item.Component{
 		filterable_list_item.New(text_block.New("Pourover coffee"), "coffee"),
@@ -33,8 +33,12 @@ func New() MyApp {
 	hobbiesAndTitle := flexbox.New(
 		[]flexbox.FlexItem{
 			{
-				Component: title,
+				Component: hobbiesListTitle,
 				FixedSize: 1,
+			},
+			{
+				Component:  hobbiesList,
+				FlexWeight: 1,
 			},
 			{
 				Component:  hobbiesList,

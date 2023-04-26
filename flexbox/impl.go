@@ -92,6 +92,7 @@ func New(items []FlexItem, options ...FlexboxOption) Component {
 				}
 			}
 		}
+		impl.focusReceivingChildrenIndexes = newFocusReceivingChildrenIndexes
 	}
 
 	impl.alignChildFocusesIfNecessary()
@@ -99,14 +100,14 @@ func New(items []FlexItem, options ...FlexboxOption) Component {
 	return impl
 }
 
-func (i implementation) Update(msg tea.Msg) tea.Cmd {
-	if !i.isFocused {
+func (impl implementation) Update(msg tea.Msg) tea.Cmd {
+	if !impl.isFocused {
 		return nil
 	}
 
 	cmds := make([]tea.Cmd, 0)
-	for idx, item := range i.items {
-		if _, found := i.focusReceivingChildrenIndexes[idx]; !found {
+	for idx, item := range impl.items {
+		if _, found := impl.focusReceivingChildrenIndexes[idx]; !found {
 			continue
 		}
 
@@ -118,13 +119,13 @@ func (i implementation) Update(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (i implementation) View() string {
+func (impl implementation) View() string {
 	// For coercing down the size of any unruly children who try to grow too big
 	var bully func(string, int) string
-	if i.direction == Horizontal {
+	if impl.direction == Horizontal {
 		bully = func(view string, itemWidth int) string {
 			return lipgloss.NewStyle().
-				MaxHeight(i.height).
+				MaxHeight(impl.height).
 				MaxWidth(itemWidth).
 				Render(view)
 		}
@@ -132,43 +133,43 @@ func (i implementation) View() string {
 		bully = func(view string, itemHeight int) string {
 			return lipgloss.NewStyle().
 				MaxHeight(itemHeight).
-				MaxWidth(i.width).
+				MaxWidth(impl.width).
 				Render(view)
 		}
 	}
 
-	itemViews := make([]string, len(i.items))
-	childSizes := i.calculateChildSizes()
+	itemViews := make([]string, len(impl.items))
+	childSizes := impl.calculateChildSizes()
 	for idx, size := range childSizes {
-		itemComponent := i.items[idx].Component
+		itemComponent := impl.items[idx].Component
 		itemViews[idx] = bully(itemComponent.View(), size)
 	}
 
 	var result string
-	if i.direction == Horizontal {
+	if impl.direction == Horizontal {
 		result = lipgloss.JoinHorizontal(lipgloss.Center, itemViews...)
 	} else {
-		result = lipgloss.JoinVertical(lipgloss.Center, itemViews...)
+		result = lipgloss.JoinVertical(lipgloss.Left, itemViews...)
 	}
 
 	// Add an extra sanity check to ensure we don't exceed our own bounds
 	return lipgloss.NewStyle().
-		MaxWidth(i.width).
-		MaxHeight(i.height).
+		MaxWidth(impl.width).
+		MaxHeight(impl.height).
 		Render(result)
 }
 
-func (i *implementation) SetFocusReceivingChildren(focusedChildrenIndexSet map[int]bool) {
-	i.focusReceivingChildrenIndexes = focusedChildrenIndexSet
-	i.alignChildFocusesIfNecessary()
+func (impl *implementation) SetFocusReceivingChildren(focusedChildrenIndexSet map[int]bool) {
+	impl.focusReceivingChildrenIndexes = focusedChildrenIndexSet
+	impl.alignChildFocusesIfNecessary()
 }
 
-func (i implementation) Resize(width int, height int) {
-	i.width = width
-	i.height = height
+func (impl *implementation) Resize(width int, height int) {
+	impl.width = width
+	impl.height = height
 
 	var resizingFunction func(component bubble_bath.Component, space int)
-	if i.direction == Horizontal {
+	if impl.direction == Horizontal {
 		resizingFunction = func(component bubble_bath.Component, space int) {
 			component.Resize(space, height)
 		}
@@ -178,28 +179,28 @@ func (i implementation) Resize(width int, height int) {
 		}
 	}
 
-	childSizes := i.calculateChildSizes()
+	childSizes := impl.calculateChildSizes()
 	for idx, size := range childSizes {
-		childComponent := i.items[idx].Component
+		childComponent := impl.items[idx].Component
 		resizingFunction(childComponent, size)
 	}
 }
 
-func (i implementation) GetWidth() int {
-	return i.width
+func (impl implementation) GetWidth() int {
+	return impl.width
 }
 
-func (i implementation) GetHeight() int {
-	return i.height
+func (impl implementation) GetHeight() int {
+	return impl.height
 }
 
-func (i *implementation) SetFocus(isFocused bool) tea.Cmd {
-	i.isFocused = isFocused
-	return i.alignChildFocusesIfNecessary()
+func (impl *implementation) SetFocus(isFocused bool) tea.Cmd {
+	impl.isFocused = isFocused
+	return impl.alignChildFocusesIfNecessary()
 }
 
-func (i *implementation) IsFocused() bool {
-	return i.isFocused
+func (impl *implementation) IsFocused() bool {
+	return impl.isFocused
 }
 
 // ====================================================================================================
@@ -207,18 +208,18 @@ func (i *implementation) IsFocused() bool {
 // ====================================================================================================
 
 // Calculates per-child sizes along the major axis of the flexbox
-func (i implementation) calculateChildSizes() []int {
-	sizeGettingFunction := bubble_bath.Component.GetWidth
-	if i.direction == Vertical {
-		sizeGettingFunction = bubble_bath.Component.GetHeight
+func (impl *implementation) calculateChildSizes() []int {
+	availableSpaceGetter := bubble_bath.Component.GetWidth
+	if impl.direction == Vertical {
+		availableSpaceGetter = bubble_bath.Component.GetHeight
 	}
 
-	availableSpace := sizeGettingFunction(i)
+	availableSpace := availableSpaceGetter(impl)
 
 	// First, add up the total sizes and fixed sizes
 	totalFixedSizeConsumed := 0
 	totalWeight := 0.0
-	for _, item := range i.items {
+	for _, item := range impl.items {
 		if item.FixedSize != 0 {
 			totalFixedSizeConsumed += item.FixedSize
 		} else {
@@ -227,11 +228,11 @@ func (i implementation) calculateChildSizes() []int {
 	}
 
 	spaceForFlexingElements := bubble_bath.GetMaxInt(0, availableSpace-totalFixedSizeConsumed)
-	spacePerWeight := totalWeight / float64(spaceForFlexingElements)
+	spacePerWeight := float64(spaceForFlexingElements) / totalWeight
 
 	// Now, allocate
-	results := make([]int, len(i.items))
-	for idx, item := range i.items {
+	results := make([]int, len(impl.items))
+	for idx, item := range impl.items {
 		var desiredItemSpace int
 		if item.FixedSize != 0 {
 			desiredItemSpace = item.FixedSize
@@ -248,18 +249,18 @@ func (i implementation) calculateChildSizes() []int {
 }
 
 // Idempotently aligns children to the right focus state
-func (i *implementation) alignChildFocusesIfNecessary() tea.Cmd {
-	if !i.shouldManageChildrenFocus {
+func (impl *implementation) alignChildFocusesIfNecessary() tea.Cmd {
+	if !impl.shouldManageChildrenFocus {
 		return nil
 	}
 
 	cmds := make([]tea.Cmd, 0)
-	for idx, item := range i.items {
+	for idx, item := range impl.items {
 		switch component := item.Component.(type) {
 		case bubble_bath.InteractiveComponent:
-			_, canChildReceiveFocus := i.focusReceivingChildrenIndexes[idx]
+			_, canChildReceiveFocus := impl.focusReceivingChildrenIndexes[idx]
 
-			shouldChildBeFocused := canChildReceiveFocus && i.isFocused
+			shouldChildBeFocused := canChildReceiveFocus && impl.isFocused
 
 			// Skip sending the focus event for children that are already in the desired state
 			if component.IsFocused() == shouldChildBeFocused {
