@@ -96,4 +96,10 @@ func (item *implementation) GetMaximumIntrinsicWidth() int {
 	return item.maximumIntrinsicWidth
 }
 
-// TODO intrinsic heights?
+func (item *implementation) GetHeightGivenWidth(width int) int {
+	if width <= item.minimumIntrinsicWidth {
+		return item.maximumIntrinsicHeight
+	}
+	wrappedStr := wordwrap.String(item.contents, width)
+	return lipgloss.Width(wrappedStr)
+}

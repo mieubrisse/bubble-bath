@@ -16,4 +16,7 @@ type Component interface {
 
 	// The maximum width of the text, if no wrapping is done whatsoever
 	GetMaximumIntrinsicWidth() int
+
+	// Gets the height, doing the appropriate word-wrapping (if necessary)
+	GetHeightGivenWidth(width int) int
 }

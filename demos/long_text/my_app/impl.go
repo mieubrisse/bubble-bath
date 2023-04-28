@@ -47,20 +47,28 @@ func (i implementation) View() string {
 	}
 
 	// TODO apply flex-grow
+	// TODO make flex-shrink be optional
 	// Apply flex-shrink
 	availableSpace := i.width - sumMaximumIntrinsicWidths
 	if availableSpace < 0 {
 		// This is basically saying that flex-basis == maxContent
+		totalShrinkApplied := 0
 		for idx, size := range sizes {
+			if idx == len(sizes)-1 {
+				// Use all leftover shrink, no matter how the rounding has gone
+				sizes[idx] = size + (availableSpace - totalShrinkApplied)
+				break
+			}
+
 			// We use flex-basis as a multiplier for the shrink factor
 			weight := float64(size) / float64(sumMaximumIntrinsicWidths)
-			shrink := weight * float64(availableSpace)
-			proposedReducedSize := size + int(math.Round(shrink))
+			shrinkFloat := weight * float64(availableSpace)
+			shrinkInt := int(math.Round(shrinkFloat))
+			totalShrinkApplied += shrinkInt
+			proposedReducedSize := size + shrinkInt
 
 			minimumSize := texts[idx].GetMinimumIntrinsicWidth()
 			sizes[idx] = bubble_bath.GetMaxInt(proposedReducedSize, minimumSize)
-
-			// TODO fix off-by-a-few error from using math.Round
 		}
 	}
 
@@ -72,7 +80,7 @@ func (i implementation) View() string {
 	result := lipgloss.JoinHorizontal(lipgloss.Top, results...)
 
 	// We're technically adding margin/padding
-	return lipgloss.NewStyle().MaxHeight(i.height).MaxWidth(i.width).Render(result)
+	return lipgloss.NewStyle().Height(i.height).MaxHeight(i.height).MaxWidth(i.width).Render(result)
 }
 
 func (i *implementation) Resize(width int, height int) {
